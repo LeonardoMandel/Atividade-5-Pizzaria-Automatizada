@@ -54,10 +54,7 @@ replace_localhost() {
     FRONTEND_PUBLIC_DIR="$PROJECT_DIR/$APP_DIR/frontend/public"
     FRONTEND_SRC_DIR="$PROJECT_DIR/$APP_DIR/frontend/src"
     
-    # Check if the files exist before attempting to edit
     if [ -f "$FRONTEND_PUBLIC_DIR/index.html" ] && [ -f "$FRONTEND_SRC_DIR/boot/axios.js" ]; then
-        # The 's' command substitutes 'localhost' with the actual IP
-        # The 'g' flag means replace all occurrences
         sed -i "s/localhost/$HOST_IP/g" "$FRONTEND_PUBLIC_DIR/index.html"
         sed -i "s/localhost/$HOST_IP/g" "$FRONTEND_SRC_DIR/boot/axios.js"
         echo "Replacement successful."
@@ -66,19 +63,11 @@ replace_localhost() {
     fi
 }
 
-# Function to check for file changes and redeploy
-redeploy_if_needed() {
-    echo "Checking for changes..."
+# Function to redeploy the application
+redeploy_application() {
+    echo "Rebuilding and redeploying the application..."
     cd "$PROJECT_DIR/$APP_DIR" || exit
-    LOCAL_HASH=$(git rev-parse HEAD)
-    REMOTE_HASH=$(git rev-parse @{u})
-
-    if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
-        echo "Changes detected. Rebuilding and redeploying the application..."
-        sudo docker-compose up --build -d
-    else
-        echo "No changes detected. Application is up to date."
-    fi
+    sudo docker-compose up --build -d
 }
 
 # Function to add the script to crontab
@@ -99,6 +88,24 @@ get_host_ip
 install_dependencies
 update_repository
 replace_localhost
-redeploy_if_needed
+
+# This is the corrected logic: always deploy on first run, then check for updates.
+if [ ! -f "$PROJECT_DIR/.first_run" ]; then
+    echo "First run detected. Deploying application..."
+    redeploy_application
+    touch "$PROJECT_DIR/.first_run" # Create a flag file
+else
+    echo "Checking for new changes..."
+    cd "$PROJECT_DIR/$APP_DIR" || exit
+    LOCAL_HASH=$(git rev-parse HEAD)
+    REMOTE_HASH=$(git rev-parse @{u})
+
+    if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
+        redeploy_application
+    else
+        echo "No changes detected. Application is up to date."
+    fi
+fi
+
 add_to_crontab
 echo "--- Deployment finished. ---"
