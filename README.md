@@ -18,3 +18,12 @@ Poste o link pro arquivo nesta tarefa
 Dica: voce pode usar git hooks para agilizar o processo
 Dica 2: você pode checar quais arquivos mudaram e sódisparar a montagem da imagem se houverem mudanças :) 
 O sistema deve se auto atualizar quando fizer um push no repositório.
+
+
+#Instrução para rodar o script em máquinas Linux, Recomendação: Debian ou Ubuntu.
+
+apt install git
+git clone https://github.com/LeonardoMandel/Atividade-5-Pizzaria-Automatizada.git
+cd ./Atividade-5-Pizzaria-Automatizada
+chmod +x deploy.sh
+./deploy.sh
